@@ -14,7 +14,7 @@ class LoginView(ttk.Frame):
                                  pady= 10
                                  )
 
-        self.inputs = ttk.Frame(root, width=450, height=350, style='TFrame')
+        self.inputs = ttk.Frame(self, width=450, height=350, style='TFrame')
 
         style = ttk.Style()
         style.configure('TEntry', width=12)
@@ -23,7 +23,7 @@ class LoginView(ttk.Frame):
         self.email_entry = ttk.Entry(self.inputs, font=("Helvetica", 15), style="TEntry")
         self.email_entry.place(x=10, y=45)
 
-        self.statusLabel = tk.Label(self, font=("Helvetica", 10))
+        self.statusLabel = tk.Label(self.inputs, font=("Helvetica", 10), text="ds")
         self.statusLabel.place(x=50, y=250)
 
         ttk.Label(self.inputs, text="Enter email:", font=("Helvetica", 15)).place(x=0, y=80)
@@ -50,5 +50,5 @@ class LoginView(ttk.Frame):
 
 
     def error(self, error):
-        self.statusLabel['text'] = error
+        self.statusLabel['text'] = "error"
         self.statusLabel['fg'] = "red"

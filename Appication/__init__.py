@@ -19,7 +19,7 @@ def config(key):
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-
+        self.s = True
         self.user = None
         self.isAuthenticated = False
 
@@ -48,12 +48,12 @@ class App(tk.Tk):
 
     def loginAction(self, event):
         response = AuthController.AuthController().login(self.currentFrame.values())
+        print(response)
         if not response:
             self.currentFrame.error("some error was occurred, retry")
 
         else:
             if response['status']:
-                self.currentFrame.forget()
                 self.user = response['user']
                 self.isAuthenticated = True
                 self.render(ChatView, self, self.user)
@@ -62,7 +62,8 @@ class App(tk.Tk):
 
     def render(self, view, root, data=None):
         if self.currentFrame is not None:
-            self.currentFrame.grid_forget()
+            self.currentFrame.destroy()
+            self.currentFrame = None
 
         self.currentFrame = view(root, data)
 
