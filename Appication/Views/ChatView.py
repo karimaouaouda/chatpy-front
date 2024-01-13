@@ -1,16 +1,21 @@
 import threading
 from tkinter import ttk
 import tkinter as tk
+
+import mouse
 from PIL import ImageTk, Image
 import pyaudio
 import wave
 import speech_recognition as sr
 from threading import Thread
+from Appication.Views.Components import *
+from mouse import WheelEvent
 
 
 class ChatView(ttk.Frame):
     def __init__(self, root, user):
         super().__init__(root)
+        self.message_canvas = None
         self.speechText = tk.StringVar()
         self.formEntry = None
         self.img = None
@@ -23,6 +28,10 @@ class ChatView(ttk.Frame):
 
         self.listening = False
 
+        self.message_count = -1
+
+        self.messages = []
+
         self.root = root
 
         self.build_layouts()
@@ -32,6 +41,8 @@ class ChatView(ttk.Frame):
         self.build_message_box()
 
         self.build_form()
+
+        self.message_box.bind("<Configure>", self.on_canvas_configure)
 
     def build_layouts(self):
         self.rowconfigure(0, weight=1)
@@ -43,6 +54,8 @@ class ChatView(ttk.Frame):
         self.grid_propagate(False)
         self.grid(row=0, column=0)
 
+    def on_mouse_scroll(self):
+        print(f"Scrolled {5} units")
     def build_header(self):
         """build the header for the conversation gui"""
 
@@ -161,6 +174,21 @@ class ChatView(ttk.Frame):
                 print("no value found")
         return 1
 
+
+    def testAction(self):
+        self.message_count = self.message_count + 1
+        message = MessageComponent(self.message_box, "loading {} messages".format(self.message_count))
+        message.grid(row=self.message_count, column=0, sticky="ew", padx=10, pady=10)
+        print("added...{}".format(self.message_count))
+
+        self.messages.append(message)
+
+        self.message_canvas.bind("<Configure>", self.on_canvas_configure)
+
+
+
+
+
     def build_form(self):
         form = tk.Frame(self, background="yellow")
         form.grid(row=2, column=0, sticky="nsew")
@@ -186,19 +214,51 @@ class ChatView(ttk.Frame):
         self.formEntry = entry
 
 
-        btn = tk.Button(form, text="Send", background="green", foreground="white", relief="flat", image=self.img)
+        btn = tk.Button(form, text="Send", background="green", command=self.testAction, foreground="white", relief="flat", image=self.img)
         btn.grid(row=0, column=2)
 
     def build_message_box(self):
-        self.message_box = tk.Frame(self, background="red")
+
+        self.message_box = ttk.Frame(self)
         self.message_box.grid(row=1, column=0, sticky="nsew")
-        self.grid_propagate(False)
-        self.message_box.columnconfigure(0, weight=1)
-        self.message_box.columnconfigure(1, weight=5)
+        self.message_box.columnconfigure(0, weight=4)
+        self.message_box.columnconfigure(1, weight=8)
+        self.message_box.columnconfigure(2, weight=1)
         self.message_box.rowconfigure(0, weight=1)
+        self.grid_propagate(False)
 
         label = tk.Label(self.message_box, background="green")
         label.grid(row=0, column=0, sticky="nsew")
+
+        canvas = tk.Canvas(self.message_box, background="yellow")
+        canvas.grid(row=0, column=1, sticky="nsew")
+        canvas.grid_propagate(False)
+
+        self.message_canvas = canvas
+
+        scrollbar = tk.Scrollbar(self.message_box, orient="vertical", command=canvas.yview)
+        scrollbar.grid(row=0, column=2, sticky="nsew")
+
+        frame = tk.Frame(self.message_box, bg="red")
+
+        self.message_box = frame
+
+        canvas.create_window((0, 0), window=self.message_box, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+
+
+        canvas.bind("<Configure>", self.on_canvas_configure)
+
+    def on_canvas_configure(self, event):
+        self.message_canvas.configure(scrollregion=self.message_canvas.bbox("all"))
+        self.message_canvas.update_idletasks()
+        self.update_messages()
+        print("scrolled")
+
+    def update_messages(self):
+        for message in self.messages:
+            message.update()
 
     def startListen(self):
         self.listenThread.start()

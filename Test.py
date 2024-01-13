@@ -1,61 +1,51 @@
-from tkinter import ttk
 import tkinter as tk
 
 
-winWidth = 500
-winHeight = 500
+def add_frame(content, color):
+    global frame_counter
+    new_frame = tk.Frame(canvas_frame, bg=color, padx=5, pady=5)
+    new_frame.pack(side="top", fill="x")
 
-app = tk.Tk()
+    label = tk.Label(new_frame, text=content)
+    label.pack(padx=5, pady=5)
 
-def resizing(event):
-    if event.widget == app:
-        if getattr(app, "_after_id", None):
-            app.after_cancel(app._after_id)
-        print(app.winfo_width())
+    # Increase the row counter for the next frame
 
-app.bind("<Configure>", resizing)
-
-screen_width = app.winfo_screenwidth()
-screen_height = app.winfo_screenheight()
-
-str1 = "{}x{}+{}+{}".format(winWidth, winHeight, int(( (screen_width - winWidth) / 2)), int(( (screen_height - winHeight) / 2)))
+    frame_counter += 1
 
 
-pane = ttk.PanedWindow(app, orient="vertical", width=winWidth, height=winHeight)
+root = tk.Tk()
 
-app.title("PySharm Chat")
+canvas = tk.Canvas(root, bg="lightblue")
+canvas.grid(row=0, column=0, sticky="nsew")
 
-app.geometry(str1)
-app.minsize(winWidth, winHeight)
+scrollbar = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
+scrollbar.grid(row=0, column=1, sticky="ns")
 
-app.iconbitmap("chat.ico")
+# Create a frame to hold the canvas
+canvas_frame = tk.Frame(canvas, bg="lightblue")
+canvas.create_window((0, 0), window=canvas_frame, anchor="nw")
 
-app.config(background='dodgerblue')
+canvas.configure(yscrollcommand=scrollbar.set)
 
-style = ttk.Style()
-style.configure("TFrame", background='whitesmoke', highlightthickness=0, borderwidth=0)
+# Counter for keeping track of rows
+frame_counter = 0
 
-frame = ttk.Frame(app, width=400, height=50, relief="flat", style='TFrame')
+root.rowconfigure(0, weight=1)
+root.columnconfigure(0, weight=1)
 
-frame.grid_propagate(False)
+add_frame("Frame 1 Content", "lightgreen")
+add_frame("Frame 2 Content", "lightcoral")
+add_frame("Frame 3 Content", "lightyellow")
+add_frame("Frame 1 Content", "lightgreen")
+add_frame("Frame 2 Content", "lightcoral")
+add_frame("Frame 3 Content", "lightyellow")
+add_frame("Frame 1 Content", "lightgreen")
+add_frame("Frame 2 Content", "lightcoral")
+add_frame("Frame 3 Content", "lightyellow")
+add_frame("Frame 1 Content", "lightgreen")
+add_frame("Frame 2 Content", "lightcoral")
+add_frame("Frame 3 Content", "lightyellow")
 
-label = ttk.Label(frame, text="some labe")
-
-txt = 5
-
-btn = ttk.Button(frame, text="click here")
-
-formFrame = ttk.Frame(app, width=400, height=50, relief="flat", style='TFrame')
-
-entry = ttk.Entry(formFrame, width=100, background='red')
-
-formFrame.grid_propagate(False)
-
-
-frame.pack()
-formFrame.pack()
-entry.grid(row=0, column=0)
-pane.pack()
-app.mainloop()
-
-
+# Start the Tkinter event loop
+root.mainloop()

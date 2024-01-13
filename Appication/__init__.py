@@ -38,11 +38,7 @@ class App(tk.Tk):
 
     def initWindow(self):
         # first we wil set the window width,height and place it at the center
-        self.geometry('{}x{}+{}+{}'.format(
-            self.width, self.height,
-            int(((self.winfo_screenwidth() - self.width) / 2)),
-            int(((self.winfo_screenheight() - self.height) / 2)))
-        )
+        self.size = (config("window_width"), config("window_height"))
         # after that we will cet an icon to our program
         self.iconbitmap('chat.ico')
 
