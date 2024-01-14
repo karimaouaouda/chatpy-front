@@ -44,6 +44,8 @@ class ChatView(ttk.Frame):
 
         self.message_box.bind("<Configure>", self.on_canvas_configure)
 
+
+    """build functions here"""
     def build_layouts(self):
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=8)
@@ -54,8 +56,6 @@ class ChatView(ttk.Frame):
         self.grid_propagate(False)
         self.grid(row=0, column=0)
 
-    def on_mouse_scroll(self):
-        print(f"Scrolled {5} units")
     def build_header(self):
         """build the header for the conversation gui"""
 
@@ -147,48 +147,6 @@ class ChatView(ttk.Frame):
         #
         # recordingPanel.grid_propagate(False)
 
-
-    def handleAudioClick(self):
-        if self.listening is True:
-            self.listening = False
-            print("stopped")
-            self.show_text()
-        else:
-            self.listening = True
-            self.listenThread.start()
-
-        return True
-
-    def show_text(self):
-        r = sr.Recognizer()
-
-        with sr.AudioFile("output.wav") as source:
-            # listen for the data (load audio to memory)
-            audio_data = r.record(source)
-            # recognize (convert from speech to text)
-            try:
-                text = r.recognize_google(audio_data)
-                print(text)
-                self.speechText.set(text)
-            except:
-                print("no value found")
-        return 1
-
-
-    def testAction(self):
-        self.message_count = self.message_count + 1
-        message = MessageComponent(self.message_box, "loading {} messages".format(self.message_count))
-        message.grid(row=self.message_count, column=0, sticky="ew", padx=10, pady=10)
-        print("added...{}".format(self.message_count))
-
-        self.messages.append(message)
-
-        self.message_canvas.bind("<Configure>", self.on_canvas_configure)
-
-
-
-
-
     def build_form(self):
         form = tk.Frame(self, background="yellow")
         form.grid(row=2, column=0, sticky="nsew")
@@ -249,6 +207,55 @@ class ChatView(ttk.Frame):
 
 
         canvas.bind("<Configure>", self.on_canvas_configure)
+
+    """other functions here"""
+
+
+    def on_mouse_scroll(self):
+        print(f"Scrolled {5} units")
+
+
+    def handleAudioClick(self):
+        if self.listening is True:
+            self.listening = False
+            print("stopped")
+            self.show_text()
+        else:
+            self.listening = True
+            self.listenThread.start()
+
+        return True
+
+    def show_text(self):
+        r = sr.Recognizer()
+
+        with sr.AudioFile("output.wav") as source:
+            # listen for the data (load audio to memory)
+            audio_data = r.record(source)
+            # recognize (convert from speech to text)
+            try:
+                text = r.recognize_google(audio_data)
+                print(text)
+                self.speechText.set(text)
+            except:
+                print("no value found")
+        return 1
+
+
+    def testAction(self):
+        self.message_count = self.message_count + 1
+        message = MessageComponent(self.message_box, "loading {} messages".format(self.message_count))
+        message.grid(row=self.message_count, column=0, sticky="ew", padx=10, pady=10)
+        print("added...{}".format(self.message_count))
+
+        self.messages.append(message)
+
+        self.message_canvas.bind("<Configure>", self.on_canvas_configure)
+
+
+
+
+
 
     def on_canvas_configure(self, event):
         self.message_canvas.configure(scrollregion=self.message_canvas.bbox("all"))

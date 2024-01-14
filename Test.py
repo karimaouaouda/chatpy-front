@@ -1,51 +1,30 @@
-import tkinter as tk
+import speech_recognition as sr
+import pyttsx3
 
+def recognize_speech():
+    recognizer = sr.Recognizer()
 
-def add_frame(content, color):
-    global frame_counter
-    new_frame = tk.Frame(canvas_frame, bg=color, padx=5, pady=5)
-    new_frame.pack(side="top", fill="x")
+    with sr.Microphone() as source:
+        print("Say something:")
+        recognizer.adjust_for_ambient_noise(source)
+        audio = recognizer.listen(source)
 
-    label = tk.Label(new_frame, text=content)
-    label.pack(padx=5, pady=5)
+    try:
+        text = recognizer.recognize_google(audio)
+        return text
+    except sr.UnknownValueError:
+        print("Sorry, could not understand audio.")
+    except sr.RequestError as e:
+        print(f"Could not request results from Google Speech Recognition service; {e}")
 
-    # Increase the row counter for the next frame
+def text_to_speech(text):
+    engine = pyttsx3.init()
+    engine.say(text)
+    engine.runAndWait()
 
-    frame_counter += 1
+if __name__ == "__main__":
+    recognized_text = recognize_speech()
 
-
-root = tk.Tk()
-
-canvas = tk.Canvas(root, bg="lightblue")
-canvas.grid(row=0, column=0, sticky="nsew")
-
-scrollbar = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
-scrollbar.grid(row=0, column=1, sticky="ns")
-
-# Create a frame to hold the canvas
-canvas_frame = tk.Frame(canvas, bg="lightblue")
-canvas.create_window((0, 0), window=canvas_frame, anchor="nw")
-
-canvas.configure(yscrollcommand=scrollbar.set)
-
-# Counter for keeping track of rows
-frame_counter = 0
-
-root.rowconfigure(0, weight=1)
-root.columnconfigure(0, weight=1)
-
-add_frame("Frame 1 Content", "lightgreen")
-add_frame("Frame 2 Content", "lightcoral")
-add_frame("Frame 3 Content", "lightyellow")
-add_frame("Frame 1 Content", "lightgreen")
-add_frame("Frame 2 Content", "lightcoral")
-add_frame("Frame 3 Content", "lightyellow")
-add_frame("Frame 1 Content", "lightgreen")
-add_frame("Frame 2 Content", "lightcoral")
-add_frame("Frame 3 Content", "lightyellow")
-add_frame("Frame 1 Content", "lightgreen")
-add_frame("Frame 2 Content", "lightcoral")
-add_frame("Frame 3 Content", "lightyellow")
-
-# Start the Tkinter event loop
-root.mainloop()
+    if recognized_text:
+        print("You said:", recognized_text)
+        text_to_speech("You said: " + recognized_text)
