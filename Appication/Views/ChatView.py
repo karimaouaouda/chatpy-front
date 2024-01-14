@@ -8,22 +8,24 @@ import pyaudio
 import wave
 import speech_recognition as sr
 from threading import Thread
-from Appication.Views.Components import *
-from mouse import WheelEvent
+
+from Appication.Views.Compononents import *
 
 
 class ChatView(ttk.Frame):
     def __init__(self, root, user):
         super().__init__(root)
+        self.calender_pic = None
+        self.listenThread = None
         self.message_canvas = None
-        self.speechText = tk.StringVar()
+        self.entryText = tk.StringVar()
         self.formEntry = None
         self.img = None
         self.header = None
         self.user = user
         self.form = {}
 
-        self.listenThread = Thread(target=self.listen, args=(), daemon=True)
+
 
 
         self.listening = False
@@ -31,6 +33,8 @@ class ChatView(ttk.Frame):
         self.message_count = -1
 
         self.messages = []
+
+        self.mic_pic = None
 
         self.root = root
 
@@ -59,7 +63,7 @@ class ChatView(ttk.Frame):
     def build_header(self):
         """build the header for the conversation gui"""
 
-        self.header = tk.Frame(self, background="dodgerblue")  # init the frame
+        self.header = tk.Frame(self, background="dodgerblue", height=25)  # init the frame
         self.header.grid_propagate(False)  # for display
 
 
@@ -70,7 +74,7 @@ class ChatView(ttk.Frame):
         self.header.grid(column=0, row=0, sticky="nsew")  # nsew sticky arg is mean that this will take all the spacce
 
 
-        label = tk.Label(self.header, background="white")
+        label = tk.Label(self.header, background="white", height=200)
         label.grid(column=0, row=0, sticky="nsew")
 
         """start adding pic to label"""
@@ -84,9 +88,9 @@ class ChatView(ttk.Frame):
         label.image = img
 
         # """start adding the title to the interface"""
-        titleLabel = tk.Label(self.header, background="green",
+        titleLabel = tk.Label(self.header, background="dodgerblue",
                               foreground="white",
-                              text="hello there",
+                              text="chat frame",
                               font=("cursive", 25),
                               anchor=tk.CENTER
                               )
@@ -148,7 +152,7 @@ class ChatView(ttk.Frame):
         # recordingPanel.grid_propagate(False)
 
     def build_form(self):
-        form = tk.Frame(self, background="yellow")
+        form = tk.Frame(self, background="whitesmoke")
         form.grid(row=2, column=0, sticky="nsew")
 
         form.rowconfigure(0, weight=1)
@@ -156,39 +160,98 @@ class ChatView(ttk.Frame):
         form.columnconfigure(1, weight=4)
         form.columnconfigure(2, weight=1)
 
+        photo = Image.open("mic.png")
+        photo = photo.resize((21, 22), 2)
+
+        pic = ImageTk.PhotoImage(photo)
+
+        self.mic_pic = pic
+
         mic = tk.Button(form, text="Send",
-                        background="green",
-                        foreground="white",
+                        background="whitesmoke",
+                        foreground="green",
                         relief="flat",
-                        image=self.img,
+                        image=self.mic_pic,
                         command=self.handleAudioClick
                         )
         mic.grid(row=0, column=0)
 
 
-        entry = tk.Entry(form, background="yellow", textvariable=self.speechText)
-        entry.grid(row=0, column=1)
+        entry = tk.Entry(form, background="white",
+                         textvariable=self.entryText,
+                         font=("Arial", 12),
+                         borderwidth=10,
+                         relief="flat",
+                         foreground="dodgerblue",
+                         highlightcolor="dodgerblue",
+                         highlightthickness=1,
+                         highlightbackground="#aaa"
+                         )
+        entry.grid(row=0, column=1, sticky="ew", pady=5)
 
         self.formEntry = entry
 
+        photo = Image.open("send.png")
+        photo = photo.resize((21, 22), 2)
 
-        btn = tk.Button(form, text="Send", background="green", command=self.testAction, foreground="white", relief="flat", image=self.img)
+        img = ImageTk.PhotoImage(photo)
+
+        self.img = img
+
+
+        btn = tk.Button(form, text="Send",
+                        background="whitesmoke",
+                        command=self.testAction,
+                        foreground="white",
+                        relief="flat",
+                        image=self.img
+                        )
         btn.grid(row=0, column=2)
 
     def build_message_box(self):
 
         self.message_box = ttk.Frame(self)
         self.message_box.grid(row=1, column=0, sticky="nsew")
-        self.message_box.columnconfigure(0, weight=4)
+        self.message_box.columnconfigure(0, weight=17)
         self.message_box.columnconfigure(1, weight=8)
         self.message_box.columnconfigure(2, weight=1)
         self.message_box.rowconfigure(0, weight=1)
         self.grid_propagate(False)
 
-        label = tk.Label(self.message_box, background="green")
+        label = tk.Label(self.message_box,
+                         background="whitesmoke",
+                         highlightthickness=1,
+                         highlightbackground="#aaa")
         label.grid(row=0, column=0, sticky="nsew")
 
-        canvas = tk.Canvas(self.message_box, background="yellow")
+
+        label.rowconfigure(0, weight=1)
+        label.rowconfigure(1, weight=1)
+        label.rowconfigure(2, weight=1)
+        label.rowconfigure(3, weight=1)
+        label.columnconfigure(0, weight=1)
+
+        photo = Image.open("calender.png")
+        photo = photo.resize((21, 22), 2)
+
+        pic = ImageTk.PhotoImage(photo)
+
+        self.calender_pic = pic
+
+
+        calender = tk.Button(label, text="click", image=self.calender_pic, relief="flat")
+        calender.grid(row=0, column=0, sticky="nsew", pady=10)
+
+        calender = tk.Button(label, text="click", image=self.calender_pic, relief="flat")
+        calender.grid(row=1, column=0, sticky="nsew", pady=10)
+
+        calender = tk.Button(label, text="click", image=self.calender_pic, relief="flat")
+        calender.grid(row=2, column=0, sticky="nsew", pady=10)
+
+        calender = tk.Button(label, text="click", image=self.calender_pic, relief="flat")
+        calender.grid(row=3, column=0, sticky="nsew", pady=10)
+
+        canvas = tk.Canvas(self.message_box, background="whitesmoke")
         canvas.grid(row=0, column=1, sticky="nsew")
         canvas.grid_propagate(False)
 
@@ -222,7 +285,12 @@ class ChatView(ttk.Frame):
             self.show_text()
         else:
             self.listening = True
+            if self.listenThread is not None and self.listenThread.is_alive():
+                self.listenThread.join()
+
+            self.listenThread = Thread(target=self.listen, args=(), daemon=True)
             self.listenThread.start()
+
 
         return True
 
@@ -235,8 +303,7 @@ class ChatView(ttk.Frame):
             # recognize (convert from speech to text)
             try:
                 text = r.recognize_google(audio_data)
-                print(text)
-                self.speechText.set(text)
+                self.entryText.set(text)
             except:
                 print("no value found")
         return 1
@@ -244,7 +311,7 @@ class ChatView(ttk.Frame):
 
     def testAction(self):
         self.message_count = self.message_count + 1
-        message = MessageComponent(self.message_box, "loading {} messages".format(self.message_count))
+        message = Message(self.message_box, self.formEntry.get())
         message.grid(row=self.message_count, column=0, sticky="ew", padx=10, pady=10)
         print("added...{}".format(self.message_count))
 
