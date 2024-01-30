@@ -1,20 +1,38 @@
-import threading
+import asyncio
+import json.decoder
 from tkinter import ttk
 import tkinter as tk
 
-import mouse
-from PIL import ImageTk, Image
 import pyaudio
 import wave
 import speech_recognition as sr
 from threading import Thread
 
 from Appication.Views.Compononents import *
+from Appication.Helper import *
+
+import Appication.Controllers.MessagingController as MessageController
+
+
+def send_message(message=None):
+    if message is not None:
+        return MessageController.send(message)
+
+
+def send_msg(component, msg):
+    response = send_message(message=msg)
+    print(response)
+    msg = json.loads(response.content.decode())['content']
+
+    component.updateText(message=msg)
 
 
 class ChatView(ttk.Frame):
     def __init__(self, root, user):
         super().__init__(root)
+        self.tools = None
+        self.chat_ico = None
+        self.todo_pic = None
         self.calender_pic = None
         self.listenThread = None
         self.message_canvas = None
@@ -24,10 +42,6 @@ class ChatView(ttk.Frame):
         self.header = None
         self.user = user
         self.form = {}
-
-
-
-
         self.listening = False
 
         self.message_count = -1
@@ -40,7 +54,8 @@ class ChatView(ttk.Frame):
 
         self.build_layouts()
 
-        self.build_header()
+        # self.header = Header(self, "chat.png", "chatpy", "dodgerblue", 25)
+        self.header = makeComponent("header", self, icon="chat.png", title="chatpy", bg="dodgerblue", h=25)
 
         self.build_message_box()
 
@@ -48,8 +63,8 @@ class ChatView(ttk.Frame):
 
         self.message_box.bind("<Configure>", self.on_canvas_configure)
 
-
     """build functions here"""
+
     def build_layouts(self):
         self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=8)
@@ -60,97 +75,6 @@ class ChatView(ttk.Frame):
         self.grid_propagate(False)
         self.grid(row=0, column=0)
 
-    def build_header(self):
-        """build the header for the conversation gui"""
-
-        self.header = tk.Frame(self, background="dodgerblue", height=25)  # init the frame
-        self.header.grid_propagate(False)  # for display
-
-
-        self.header.columnconfigure(0, weight=1)
-        self.header.columnconfigure(1, weight=5)
-        self.header.rowconfigure(0, weight=1)
-
-        self.header.grid(column=0, row=0, sticky="nsew")  # nsew sticky arg is mean that this will take all the spacce
-
-
-        label = tk.Label(self.header, background="white", height=200)
-        label.grid(column=0, row=0, sticky="nsew")
-
-        """start adding pic to label"""
-        photo = Image.open("chat.png")
-        photo = photo.resize((21, 22), 2)
-
-        img = ImageTk.PhotoImage(photo)
-        self.img = img
-
-        label.configure(image=img)
-        label.image = img
-
-        # """start adding the title to the interface"""
-        titleLabel = tk.Label(self.header, background="dodgerblue",
-                              foreground="white",
-                              text="chat frame",
-                              font=("cursive", 25),
-                              anchor=tk.CENTER
-                              )
-        #
-
-        titleLabel.grid(row=0, column=1, sticky="nsew")
-
-        #
-        # ttk.Style(self).configure("TFrame", background="red")
-        #
-        # self.configure(style="TFrame", borderwidth=2, width=500, height=500)
-        #
-        # img = Image.open("chat.png")
-        # img = img.resize((50, 50), 2)
-        #
-        # img = ImageTk.PhotoImage(img)
-        #
-        # self.grid(row=0, column=0)
-        #
-        # self.heading = tk.Frame(self, background='black')
-        #
-        # label = tk.Label(self.heading, image=img, height=50)
-        # self.heading.grid(row=0, column=0, columnspan=3, sticky="nsew")
-        #
-        # label.configure(image=img)
-        # label.image = img
-        #
-        #
-        #
-        # self.grid_propagate(False)
-        #
-        #
-        # left_panel = tk.Frame(self, background="green")
-        #
-        # left_panel.grid(row=1, column=0, sticky="nsew")
-        #
-        # message_box = tk.Frame(self, background="yellow")
-        # message_box.grid(row=1, column=1, columnspan=2, sticky="nsew")
-        #
-        #
-        # button = tk.Button(message_box, command=self.handleAudioClick)
-        #
-        #
-        # form_box = tk.Frame(self, background='black')
-        # form_box.grid(row=2, column=0, columnspan=3, sticky="nsew")
-        #
-        # recordingPanel = tk.Frame(self, width=200, height=100)
-        # recordingPanel.grid(row=1, column=1)
-        #
-        # recordingPanel.rowconfigure(0, weight=1)
-        # recordingPanel.rowconfigure(1, weight=1)
-        #
-        # recText = tk.Label(recordingPanel, text="recording...")
-        # recText.grid(row=0, column=0, sticky=tk.W)
-        #
-        # recStopBtn = tk.Button(recordingPanel, text="stop recording")
-        # recStopBtn.grid(row=1, column=0, sticky=tk.W)
-        #
-        # recordingPanel.grid_propagate(False)
-
     def build_form(self):
         form = tk.Frame(self, background="whitesmoke")
         form.grid(row=2, column=0, sticky="nsew")
@@ -160,12 +84,7 @@ class ChatView(ttk.Frame):
         form.columnconfigure(1, weight=4)
         form.columnconfigure(2, weight=1)
 
-        photo = Image.open("mic.png")
-        photo = photo.resize((21, 22), 2)
-
-        pic = ImageTk.PhotoImage(photo)
-
-        self.mic_pic = pic
+        self.mic_pic = generateIcon("mic.png", 21, 22)
 
         mic = tk.Button(form, text="Send",
                         background="whitesmoke",
@@ -175,7 +94,6 @@ class ChatView(ttk.Frame):
                         command=self.handleAudioClick
                         )
         mic.grid(row=0, column=0)
-
 
         entry = tk.Entry(form, background="white",
                          textvariable=self.entryText,
@@ -191,13 +109,7 @@ class ChatView(ttk.Frame):
 
         self.formEntry = entry
 
-        photo = Image.open("send.png")
-        photo = photo.resize((21, 22), 2)
-
-        img = ImageTk.PhotoImage(photo)
-
-        self.img = img
-
+        self.img = generateIcon("send.png", 21, 22)
 
         btn = tk.Button(form, text="Send",
                         background="whitesmoke",
@@ -218,38 +130,7 @@ class ChatView(ttk.Frame):
         self.message_box.rowconfigure(0, weight=1)
         self.grid_propagate(False)
 
-        label = tk.Label(self.message_box,
-                         background="whitesmoke",
-                         highlightthickness=1,
-                         highlightbackground="#aaa")
-        label.grid(row=0, column=0, sticky="nsew")
-
-
-        label.rowconfigure(0, weight=1)
-        label.rowconfigure(1, weight=1)
-        label.rowconfigure(2, weight=1)
-        label.rowconfigure(3, weight=1)
-        label.columnconfigure(0, weight=1)
-
-        photo = Image.open("calender.png")
-        photo = photo.resize((21, 22), 2)
-
-        pic = ImageTk.PhotoImage(photo)
-
-        self.calender_pic = pic
-
-
-        calender = tk.Button(label, text="click", image=self.calender_pic, relief="flat")
-        calender.grid(row=0, column=0, sticky="nsew", pady=10)
-
-        calender = tk.Button(label, text="click", image=self.calender_pic, relief="flat")
-        calender.grid(row=1, column=0, sticky="nsew", pady=10)
-
-        calender = tk.Button(label, text="click", image=self.calender_pic, relief="flat")
-        calender.grid(row=2, column=0, sticky="nsew", pady=10)
-
-        calender = tk.Button(label, text="click", image=self.calender_pic, relief="flat")
-        calender.grid(row=3, column=0, sticky="nsew", pady=10)
+        self.tools = makeComponent("left_bar", self.message_box, data=None)
 
         canvas = tk.Canvas(self.message_box, background="whitesmoke")
         canvas.grid(row=0, column=1, sticky="nsew")
@@ -260,23 +141,19 @@ class ChatView(ttk.Frame):
         scrollbar = tk.Scrollbar(self.message_box, orient="vertical", command=canvas.yview)
         scrollbar.grid(row=0, column=2, sticky="nsew")
 
-        frame = tk.Frame(self.message_box, bg="red")
+        frame = tk.Frame(self.message_box)
 
         self.message_box = frame
 
         canvas.create_window((0, 0), window=self.message_box, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
 
-
-
         canvas.bind("<Configure>", self.on_canvas_configure)
 
     """other functions here"""
 
-
     def on_mouse_scroll(self):
         print(f"Scrolled {5} units")
-
 
     def handleAudioClick(self):
         if self.listening is True:
@@ -290,7 +167,6 @@ class ChatView(ttk.Frame):
 
             self.listenThread = Thread(target=self.listen, args=(), daemon=True)
             self.listenThread.start()
-
 
         return True
 
@@ -308,26 +184,36 @@ class ChatView(ttk.Frame):
                 print("no value found")
         return 1
 
-
     def testAction(self):
+        # first let's push the message to the view
         self.message_count = self.message_count + 1
-        message = Message(self.message_box, self.formEntry.get())
-        message.grid(row=self.message_count, column=0, sticky="ew", padx=10, pady=10)
-        print("added...{}".format(self.message_count))
+        message = makeComponent("message", self.message_box, message=self.formEntry.get())
+        message.config(bg="blue", borderwidth=5)
+        message.grid(row=self.message_count, column=1, sticky="w")
 
-        self.messages.append(message)
+        # send the message to server and waiting for a response
+
+        message = makeComponent("message", self.message_box, message="waiting...")
+        message.config(bg="white", borderwidth=5)
+        self.message_count = self.message_count + 1
+        message.grid(row=self.message_count, column=1, sticky="w")
+
+        #send the request
+        #self.send_and_replace(messageComponent=message)
+
+        send_msg(message, self.formEntry.get())
+
+
+
+        # thread = Thread(target=send_msg, args=(message, "some input"))
+        # thread.start()
+        # thread.join()
 
         self.message_canvas.bind("<Configure>", self.on_canvas_configure)
-
-
-
-
-
 
     def on_canvas_configure(self, event):
         self.message_canvas.configure(scrollregion=self.message_canvas.bbox("all"))
         self.message_canvas.update_idletasks()
-        self.update_messages()
         print("scrolled")
 
     def update_messages(self):
@@ -337,6 +223,7 @@ class ChatView(ttk.Frame):
     def startListen(self):
         self.listenThread.start()
         print("gone")
+
     def listen(self):
         print("listen...")
         chunk = 1024  # Record in chunks of 1024 samples

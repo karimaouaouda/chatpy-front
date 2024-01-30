@@ -5,14 +5,15 @@ import tkinter as tk
 class LoginView(ttk.Frame):
     def __init__(self, root, data):
         super().__init__(root)
+        self.root = root
         style = ttk.Style(self)
         style.configure('TFrame')
         self.heading = tk.Label(self, text="Login now!",
-                                 fg="red",
-                                 font=("Helvetica", 25),
-                                 padx=5,
-                                 pady= 10
-                                 )
+                                fg="red",
+                                font=("Helvetica", 25),
+                                padx=5,
+                                pady=10
+                                )
 
         self.inputs = ttk.Frame(self, width=450, height=350, style='TFrame')
 
@@ -33,14 +34,14 @@ class LoginView(ttk.Frame):
         self.login_btn = ttk.Button(self.inputs, text="Login")
         self.login_btn.place(x=10, y=150)
 
-
         self.pack()
         self.heading.pack()
         self.inputs.pack()
 
-    def bindAction(self, action):
-        if action is not None:
-            self.login_btn.bind("<Button-1>", action)
+        self.login_btn.bind("<Button-1>", self.action)
+
+    def action(self, event):
+        self.root.renderView("chat")
 
     def values(self):
         return {
@@ -48,6 +49,23 @@ class LoginView(ttk.Frame):
             "password": self.password_entry.get()
         }
 
+    def loginAction(self, event):
+        response = AuthController.AuthController().login(self.values())
+        print(response)
+        if not response:
+            self.error("some error was occurred, retry")
+
+        else:
+            if response['status']:
+                data = {
+                    "user": response['user'],
+                    "auth": True
+                }
+
+                self.root.renderView("chat", data)
+
+            else:
+                self.error(response['message'])
 
     def error(self, error):
         self.statusLabel['text'] = "error"

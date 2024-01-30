@@ -50,5 +50,8 @@ class MessageComponent(Component):
     def message(self, message):
         self.data["message"] = message
 
+    def updateText(self, message):
+        self.data["message"].set(message)
+
     def button_click(self, event = None):
         text_to_speech_gTTS(self.data["message"].get())

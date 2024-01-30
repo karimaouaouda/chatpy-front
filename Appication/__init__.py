@@ -3,6 +3,14 @@ from Appication.Views.LoginView import LoginView
 from Appication.Views.ChatView import ChatView
 import Appication.Controllers.AuthController as AuthController
 
+def generateIcon(icon, w, h):
+    photo = Image.open(icon)
+    photo = photo.resize((w, h), 2)
+
+    pic = ImageTk.PhotoImage(photo)
+
+    return pic
+
 def config(key):
     configs = {
         "window_width" : 500,
@@ -23,6 +31,12 @@ class App(tk.Tk):
         self.user = None
         self.isAuthenticated = False
 
+        self.views = {
+            "login": LoginView,
+            "chat": ChatView,
+            # "agenda": AgendaView
+        }
+
         self.width = config("window_width")
         self.height = config("window_height")
 
@@ -32,9 +46,7 @@ class App(tk.Tk):
 
         self.currentFrame = None
 
-        self.render(ChatView, self)
-
-        #self.currentFrame.bindAction(self.loginAction)
+        self.renderView("chat")
 
     def initWindow(self):
         # first we wil set the window width,height and place it at the center
@@ -42,26 +54,19 @@ class App(tk.Tk):
         # after that we will cet an icon to our program
         self.iconbitmap('chat.ico')
 
-    def loginAction(self, event):
-        response = AuthController.AuthController().login(self.currentFrame.values())
-        print(response)
-        if not response:
-            self.currentFrame.error("some error was occurred, retry")
 
-        else:
-            if response['status']:
-                self.user = response['user']
-                self.isAuthenticated = True
-                self.render(ChatView, self, self.user)
-            else:
-                self.currentFrame.error(response['message'])
+    def renderView(self, view):
+        self.render(view, self)
+
+    def loginAction(self, event):
+        self.render(ChatView, self)
 
     def render(self, view, root, data=None):
         if self.currentFrame is not None:
             self.currentFrame.destroy()
             self.currentFrame = None
 
-        self.currentFrame = view(root, data)
+        self.currentFrame = self.views[view](root, data)
 
 
 
